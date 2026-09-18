@@ -28,7 +28,7 @@
 
 1. **Clone the Repository:**
    ```bash
-   git clone [https://github.com/Ravannan777/ShadowSleuth.git](https://github.com/Ravannan777/ShadowSleuth.git)
+   git clone [https://github.com/Ravannan777/shadowsleuth.git](https://github.com/Ravannan777/shadowsleuth.git)
 
     cd ShadowSleuth
 2. Install Required Python Libraries:
