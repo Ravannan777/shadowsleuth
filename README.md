@@ -35,7 +35,7 @@
 Make sure you have Python installed, then run:
    ```bash
    
-   pip install requests phonenumbers
+   pip install -r requirements.txt
 
 3. Run the Tool:
 
