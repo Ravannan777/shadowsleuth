@@ -1,267 +1,261 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-"""
-Tool Name : ShadowSleuth - Advanced OSINT & Reconnaissance Utility
-Author    : Sreenand K
-Platform  : Windows, Linux, Termux (Android)
-"""
-
+import streamlit as st
 import socket
-import sys
-import platform
 import json
 import urllib.request
 import requests
 import phonenumbers
 from phonenumbers import carrier, geocoder, timezone
 
-def banner():
-    print("=" * 65)
-    print("      [+] SHADOWSLEUTH - ADVANCED OSINT TOOL [+]")
-    print(f"      [i] Developer : Sreenand K")
-    print(f"      [i] Platform  : Windows, Linux, Termux (Android)")
-    print(f"      [i] Version   : 1.5.0 (Professional Edition)")
-    print("=" * 65)
+# Page Configuration
+st.set_page_config(
+    page_title="ShadowSleuth | Military-Grade OSINT", 
+    page_icon="🕵️‍♂️", 
+    layout="wide"
+)
 
-def phone_osint():
-    print("\n--- [ 1. Phone Number Intelligence & Social Check ] ---")
-    number_str = input("Enter phone number (e.g., 8289804072 or +918289804072): ")
-    
-    if not number_str.startswith("+"):
-        number_str = "+91" + number_str
+# ---------------------------------------------------------
+# CYBERPUNK / MILITARY-GRADE TACTICAL CSS STYLING
+# ---------------------------------------------------------
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@400;600&display=swap');
 
-    try:
-        parsed_number = phonenumbers.parse(number_str)
-        if phonenumbers.is_valid_number(parsed_number):
-            formatted_num = phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.E164)
-            print("\n[+] Valid Phone Number Found!")
-            print(f"    -> Full Number      : {formatted_num}")
-            print(f"    -> Country/Location : {geocoder.description_for_number(parsed_number, 'en')}")
-            print(f"    -> Service Provider : {carrier.name_for_number(parsed_number, 'en')}")
-            print(f"    -> Timezone         : {timezone.time_zones_for_number(parsed_number)}")
-            
-            print("\n[*] Meta & Social Platform Intelligence:")
-            print(f"    -> WhatsApp Link    : https://wa.me/{formatted_num.replace('+', '')}")
-            print(f"    -> Facebook Lookup  : https://www.facebook.com/search/people/?q={formatted_num}")
-            print(f"    -> Instagram Profile: Check via Username/Recovery (Direct phone scraping blocked by Meta API)")
-        else:
-            print("[-] Invalid phone number or formatting.")
-    except Exception as e:
-        print(f"[-] Error: {e}")
-
-def username_osint():
-    print("\n--- [ 2. Username Recon / Social Media Check ] ---")
-    username = input("Enter username to search: ").strip()
-    
-    platforms = {
-        "GitHub": {"url": f"https://github.com/{username}", "error_text": "Not Found"},
-        "Instagram": {"url": f"https://www.instagram.com/{username}/", "error_text": "Page Couldn't Be Loaded"},
-        "Twitter (X)": {"url": f"https://twitter.com/{username}", "error_text": "this page doesn't exist"},
-        "Facebook": {"url": f"https://www.facebook.com/{username}", "error_text": "this page isn't available"},
-        "WhatsApp": {"url": f"https://wa.me/{username}", "error_text": "phone number shared via url is invalid"},
-        "Pinterest": {"url": f"https://www.pinterest.com/{username}/", "error_text": "profile not found"},
-        "Reddit": {"url": f"https://www.reddit.com/user/{username}", "error_text": "sorry, nobody on reddit goes by that name"},
-        "TikTok": {"url": f"https://www.tiktok.com/@{username}", "error_text": "Couldn't find this account"},
-        "Steam": {"url": f"https://steamcommunity.com/id/{username}", "error_text": "The specified profile could not be found"}
+    .stApp {
+        background-color: #05050a;
+        color: #00ff66;
+        font-family: 'Share Tech Mono', monospace;
     }
 
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+    [data-testid="stSidebar"] {
+        background-color: #080c14;
+        border-right: 1px solid #1f293d;
+    }
     
-    print(f"\n[*] Searching accurately for username '{username}' across platforms...\n")
+    [data-testid="stSidebar"] .stSelectbox label {
+        color: #00f0ff !important;
+        font-weight: bold;
+    }
+
+    h1, h2, h3 {
+        font-family: 'Share Tech Mono', monospace;
+        color: #00f0ff !important;
+        text-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+    }
+
+    .stTextInput input {
+        background-color: #0d111a !important;
+        color: #00ff66 !important;
+        border: 1px solid #1f3a2e !important;
+        border-radius: 4px;
+        font-family: 'Share Tech Mono', monospace;
+    }
+    .stTextInput input:focus {
+        border-color: #00ff66 !important;
+        box-shadow: 0 0 8px rgba(0, 255, 102, 0.4);
+    }
+
+    .stButton button {
+        background: linear-gradient(135deg, #0b1f14 0%, #0d2b1d 100%);
+        color: #00ff66;
+        border: 1px solid #00ff66;
+        font-family: 'Share Tech Mono', monospace;
+        font-weight: bold;
+        border-radius: 4px;
+        box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
+        transition: all 0.3s ease;
+    }
+    .stButton button:hover {
+        background: #00ff66;
+        color: #05050a;
+        box-shadow: 0 0 20px rgba(0, 255, 102, 0.6);
+    }
+
+    .stSuccess {
+        background-color: rgba(0, 255, 102, 0.1) !important;
+        border: 1px solid #00ff66 !important;
+        color: #00ff66 !important;
+    }
+    .stError {
+        background-color: rgba(255, 0, 85, 0.1) !important;
+        border: 1px solid #ff0055 !important;
+        color: #ff0055 !important;
+    }
+    .stWarning {
+        background-color: rgba(255, 170, 0, 0.1) !important;
+        border: 1px solid #ffaa00 !important;
+        color: #ffaa00 !important;
+    }
+
+    hr {
+        border-color: #1f293d;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# App Header
+st.markdown("<h1>[+] SHADOWSLEUTH // TACTICAL OSINT ENGINE</h1>", unsafe_allow_html=True)
+st.markdown("<p style='color: #00f0ff; letter-spacing: 2px;'>DEVELOPER: SREENAND K | STATUS: SECURE / ACTIVE | EDITION: v1.5.0 PRO</p>", unsafe_allow_html=True)
+st.divider()
+
+# Sidebar Navigation
+menu = st.sidebar.selectbox("⚡ SELECT RECON MODULE", [
+    "Phone Intelligence",
+    "Username Recon",
+    "Email OSINT",
+    "IP / Geo-Location",
+    "Port Scanner",
+    "Domain & DNS",
+    "MAC Vendor Lookup"
+])
+
+# 1. Phone Intelligence
+if menu == "Phone Intelligence":
+    st.subheader("📱 Phone Number Intelligence & Social Vector")
+    number_str = st.text_input("Enter target phone number (e.g., +918289804072):", "+91")
     
-    for platform_name, data in platforms.items():
-        url = data["url"]
-        error_msg = data["error_text"].lower()
-        try:
-            response = requests.get(url, headers=headers, timeout=6)
-            if response.status_code == 200:
-                if error_msg in response.text.lower():
-                    print(f"[-] [{platform_name}] Not Found")
+    if st.button("EXECUTE PHONE SCAN"):
+        if number_str:
+            if not number_str.startswith("+"):
+                number_str = "+91" + number_str
+            try:
+                parsed_number = phonenumbers.parse(number_str)
+                if phonenumbers.is_valid_number(parsed_number):
+                    formatted_num = phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.E164)
+                    st.success("[+] Target Verified: Valid Phone Number")
+                    st.code(f"""
+[+] Full Number      : {formatted_num}
+[+] Country/Location : {geocoder.description_for_number(parsed_number, 'en')}
+[+] Service Provider : {carrier.name_for_number(parsed_number, 'en')}
+[+] Timezone         : {timezone.time_zones_for_number(parsed_number)}
+                    """)
+                    st.markdown("### Tactical Endpoints")
+                    st.markdown(f"- [WhatsApp Direct Link](https://wa.me/{formatted_num.replace('+', '')})")
+                    st.markdown(f"- [Facebook Entity Lookup](https://www.facebook.com/search/people/?q={formatted_num})")
                 else:
-                    print(f"[+] [{platform_name}] Found -> {url}")
-            elif response.status_code == 404:
-                print(f"[-] [{platform_name}] Not Found")
+                    st.error("[-] Invalid phone footprint or formatting.")
+            except Exception as e:
+                st.error(f"[-] Execution Error: {e}")
+
+# 2. Username Recon
+elif menu == "Username Recon":
+    st.subheader("👤 Username Recon / Cross-Platform Matrix")
+    username = st.text_input("Enter target username:").strip()
+    
+    if st.button("EXECUTE USERNAME SCAN"):
+        if username:
+            platforms = {
+                "GitHub": f"https://github.com/{username}",
+                "Instagram": f"https://www.instagram.com/{username}/",
+                "Twitter (X)": f"https://twitter.com/{username}",
+                "Facebook": f"https://www.facebook.com/{username}",
+                "Pinterest": f"https://www.pinterest.com/{username}/",
+                "Reddit": f"https://www.reddit.com/user/{username}",
+                "TikTok": f"https://www.tiktok.com/@{username}",
+                "Steam": f"https://steamcommunity.com/id/{username}"
+            }
+            headers = {"User-Agent": "Mozilla/5.0"}
+            
+            with st.spinner("Scanning global networks..."):
+                for p_name, url in platforms.items():
+                    try:
+                        res = requests.get(url, headers=headers, timeout=5)
+                        if res.status_code == 200:
+                            st.success(f"[+] [{p_name}] TARGET FOUND -> {url}")
+                        else:
+                            st.warning(f"[-] [{p_name}] Not Found / Restricted")
+                    except:
+                        st.error(f"[!] [{p_name}] Connection Timeout")
+
+# 3. Email OSINT
+elif menu == "Email OSINT":
+    st.subheader("📧 Email Intelligence & Disposable Mail Vector")
+    email = st.text_input("Enter target email address:").strip()
+    
+    if st.button("EXECUTE EMAIL ANALYSIS"):
+        if "@" in email:
+            uname, domain = email.split("@", 1)
+            disposable_domains = ["mailinator.com", "10minutemail.com", "tempmail.com", "yopmail.com", "sharklasers.com"]
+            
+            st.code(f"""
+[i] Email Entity : {email}
+[i] Username     : {uname}
+[i] Domain Host  : {domain}
+            """)
+            
+            if domain.lower() in disposable_domains:
+                st.error("⚠️ THREAT DETECTED: Temporary / Disposable (Burner) Mail Provider!")
             else:
-                print(f"[?] [{platform_name}] Status: {response.status_code}")
-        except requests.exceptions.RequestException:
-            print(f"[!] [{platform_name}] Connection Error / Blocked")
+                st.success("[+] Status: Standard / Legitimate Domain Entity")
+        else:
+            st.error("[-] Invalid email structure.")
 
-def email_osint():
-    print("\n--- [ 3. Email OSINT & Disposable Mail Check ] ---")
-    email = input("Enter email address to analyze: ").strip()
+# 4. IP Geolocation
+elif menu == "IP / Geo-Location":
+    st.subheader("🌍 IP Network & Geo-Intelligence Lookup")
+    ip_input = st.text_input("Enter target IP (leave blank for local host):").strip()
     
-    if "@" not in email:
-        print("[-] Invalid email format.")
-        return
-
-    username, domain = email.split("@", 1)
-    
-    disposable_domains = [
-        "mailinator.com", "10minutemail.com", "tempmail.com", "guerrillamail.com",
-        "trashmail.com", "yopmail.com", "sharklasers.com", "getnada.com",
-        "dispostable.com", "temp-mail.org", "fakemailgenerator.com"
-    ]
-
-    print(f"\n[*] Analyzing Email: {email}")
-    print(f"    -> Username : {username}")
-    print(f"    -> Domain   : {domain}")
-
-    if domain.lower() in disposable_domains:
-        print("    -> Status   : [!] WARNING: This is a Temporary / Disposable (Fake) Email!")
-    else:
-        print("    -> Status   : [+] Standard / Legitimate Email Domain")
-
-    print("\n[*] Checking common platforms for email association...")
-    email_platforms = {
-        "Gravatar": f"https://en.gravatar.com/{username}.json",
-        "GitHub (API check)": f"https://api.github.com/search/users?q={email}",
-        "Facebook Recovery Link": f"https://www.facebook.com/login/identify/?ctx=recover&email={email}"
-    }
-
-    headers = {"User-Agent": "Mozilla/5.0"}
-    for p_name, p_url in email_platforms.items():
+    if st.button("EXECUTE IP TRACE"):
+        url = f"http://ip-api.com/json/{ip_input}" if ip_input else "http://ip-api.com/json/"
         try:
-            res = requests.get(p_url, headers=headers, timeout=5)
-            if res.status_code == 200:
-                print(f"[+] [{p_name}] Associated endpoint active!")
+            response = urllib.request.urlopen(url)
+            data = json.loads(response.read().decode())
+            if data['status'] == 'success':
+                st.json(data)
             else:
-                print(f"[-] [{p_name}] Restricted or Not found")
-        except:
-            print(f"[!] [{p_name}] Connection error")
+                st.error("[-] Target telemetry retrieval failed.")
+        except Exception as e:
+            st.error(f"[-] Error: {e}")
 
-def ip_geolocation():
-    print("\n--- [ 4. IP / Geo-Location Lookup ] ---")
-    ip_input = input("Enter IP address or leave blank for your IP: ").strip()
-    url = f"http://ip-api.com/json/{ip_input}" if ip_input else "http://ip-api.com/json/"
+# 5. Port Scanner
+elif menu == "Port Scanner":
+    st.subheader("🔌 Advanced Tactical Port Scanner")
+    target = st.text_input("Enter target host/IP (e.g., scanme.nmap.org):").strip()
     
-    try:
-        print("\n[*] Fetching location data...")
-        response = urllib.request.urlopen(url)
-        data = json.loads(response.read().decode())
-        
-        if data['status'] == 'success':
-            print("\n[+] Target IP Details Found:")
-            print(f"    -> Query IP     : {data.get('query')}")
-            print(f"    -> Country      : {data.get('country')} ({data.get('countryCode')})")
-            print(f"    -> Region/State : {data.get('regionName')} ({data.get('region')})")
-            print(f"    -> City         : {data.get('city')}")
-            print(f"    -> ZIP Code     : {data.get('zip')}")
-            print(f"    -> ISP          : {data.get('isp')}")
-            print(f"    -> Organization : {data.get('org')}")
-            print(f"    -> Timezone     : {data.get('timezone')}")
-            print(f"    -> Coordinates  : Lat: {data.get('lat')}, Lon: {data.get('lon')}")
-        else:
-            print("[-] Failed to retrieve IP information.")
-    except Exception as e:
-        print(f"[-] Error: {e}")
+    if st.button("INITIATE PORT PROBE"):
+        if target:
+            try:
+                target_ip = socket.gethostbyname(target)
+                st.info(f"[*] Target Resolved: {target} -> {target_ip}")
+                common_ports = {21: "FTP", 22: "SSH", 80: "HTTP", 443: "HTTPS", 3306: "MySQL"}
+                
+                for port, service in common_ports.items():
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    s.settimeout(1.0)
+                    if s.connect_ex((target_ip, port)) == 0:
+                        st.success(f"[OPEN] Port {port} ({service})")
+                    else:
+                        st.warning(f"[CLOSED] Port {port} ({service})")
+                    s.close()
+            except Exception as e:
+                st.error(f"[-] Socket Error: {e}")
 
-def port_scanner():
-    print("\n--- [ 5. Advanced Quick Port Scanner ] ---")
-    target = input("Enter target IP or Domain (e.g., scanme.nmap.org): ").strip()
+# 6. Domain & DNS Info
+elif menu == "Domain & DNS":
+    st.subheader("🌐 Domain Recon & DNS Resolution")
+    domain = st.text_input("Enter target domain name:").strip()
     
-    try:
-        target_ip = socket.gethostbyname(target)
-        print(f"\n[*] Resolved Target: {target} -> {target_ip}")
-        print("[*] Scanning common ports... Please wait.\n")
-        
-        common_ports = {
-            21: "FTP", 22: "SSH", 23: "Telnet", 25: "SMTP",
-            53: "DNS", 80: "HTTP", 110: "POP3", 443: "HTTPS",
-            445: "SMB", 3306: "MySQL", 3389: "RDP", 8080: "HTTP-Proxy"
-        }
-        
-        for port, service in common_ports.items():
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(1.5)
-            result = s.connect_ex((target_ip, port))
-            if result == 0:
-                print(f"[+] Port {port} ({service}) IS OPEN")
-            else:
-                print(f"[-] Port {port} ({service}) is closed")
-            s.close()
-    except socket.gaierror:
-        print("[-] Hostname could not be resolved.")
-    except Exception as e:
-        print(f"[-] Error: {e}")
+    if st.button("RESOLVE DNS RECORDS"):
+        if domain:
+            try:
+                ip_addr = socket.gethostbyname(domain)
+                st.success(f"[+] Resolved IP: {ip_addr}")
+                host_info = socket.gethostbyaddr(ip_addr)
+                st.code(f"[+] Hostname Entity: {host_info[0]}")
+            except Exception as e:
+                st.error(f"[-] Resolution Failed: {e}")
 
-def domain_recon():
-    print("\n--- [ 6. Domain & DNS Information ] ---")
-    domain = input("Enter Domain Name (e.g., google.com): ").strip()
+# 7. MAC Vendor Lookup
+elif menu == "MAC Vendor Lookup":
+    st.subheader("💻 MAC Hardware Vendor Identification")
+    mac = st.text_input("Enter MAC address (e.g., 00:11:22:33:44:55):").strip()
     
-    try:
-        print(f"\n[*] Gathering information for {domain}...")
-        ip_addr = socket.gethostbyname(domain)
-        print(f"[+] IP Address : {ip_addr}")
-        
-        host_info = socket.gethostbyaddr(ip_addr)
-        print(f"[+] Hostname   : {host_info[0]}")
-        if host_info[1]:
-            print(f"[+] Aliases    : {', '.join(host_info[1])}")
-    except socket.gaierror:
-        print("[-] Could not resolve domain name.")
-    except Exception as e:
-        print(f"[-] Error: {e}")
-
-def mac_lookup():
-    print("\n--- [ 7. MAC Address Vendor Lookup ] ---")
-    mac = input("Enter MAC address (e.g., 00:11:22:33:44:55): ").strip()
-    url = f"https://api.macvendors.com/{mac}"
-    headers = {"User-Agent": "Mozilla/5.0"}
-    
-    try:
-        print(f"\n[*] Looking up vendor for MAC: {mac}...")
-        response = requests.get(url, headers=headers, timeout=5)
-        if response.status_code == 200:
-            print(f"[+] MAC Vendor Found: {response.text}")
-        elif response.status_code == 404:
-            print("[-] MAC address vendor not found or invalid format.")
-        else:
-            print(f"[?] Error status code: {response.status_code}")
-    except Exception as e:
-        print(f"[-] Error: {e}")
-
-def main():
-    while True:
-        banner()
-        print(" 1. Phone Number Intelligence & Social Check")
-        print(" 2. Username OSINT (Social Media Search)")
-        print(" 3. Email OSINT & Disposable Mail Check")
-        print(" 4. IP / Geo-Location Lookup")
-        print(" 5. Advanced Quick Port Scanner")
-        print(" 6. Domain & DNS Information")
-        print(" 7. MAC Address Vendor Lookup")
-        print(" 8. Exit")
-        
-        choice = input("\nShadowSleuth > Select an option: ")
-        
-        if choice == '1':
-            phone_osint()
-            input("\nPress Enter to return to the main menu...")
-        elif choice == '2':
-            username_osint()
-            input("\nPress Enter to return to the main menu...")
-        elif choice == '3':
-            email_osint()
-            input("\nPress Enter to return to the main menu...")
-        elif choice == '4':
-            ip_geolocation()
-            input("\nPress Enter to return to the main menu...")
-        elif choice == '5':
-            port_scanner()
-            input("\nPress Enter to return to the main menu...")
-        elif choice == '6':
-            domain_recon()
-            input("\nPress Enter to return to the main menu...")
-        elif choice == '7':
-            mac_lookup()
-            input("\nPress Enter to return to the main menu...")
-        elif choice == '8':
-            print("\nExiting ShadowSleuth. Stay safe!")
-            sys.exit(0)
-        else:
-            print("\n[-] Invalid option! Please select a valid number.")
-            input("\nPress Enter to continue...")
-
-if __name__ == "__main__":
-    main()
+    if st.button("QUERY HARDWARE VENDOR"):
+        if mac:
+            try:
+                res = requests.get(f"https://api.macvendors.com/{mac}", timeout=5)
+                if res.status_code == 200:
+                    st.success(f"[+] Hardware Vendor Identified: {res.text}")
+                else:
+                    st.warning("[-] Vendor signature not found.")
+            except Exception as e:
+                st.error(f"[-] API Error: {e}")

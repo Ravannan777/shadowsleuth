@@ -28,14 +28,14 @@
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/Ravannan777/shadowsleuth.git
+   git clone [https://github.com/Ravannan777/ShadowSleuth.git](https://github.com/Ravannan777/ShadowSleuth.git)
 
     cd ShadowSleuth
 2. Install Required Python Libraries:
 Make sure you have Python installed, then run:
    ```bash
    
-   pip install -r requirements.txt
+   pip install requests phonenumbers
 
 3. Run the Tool:
 

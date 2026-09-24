@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ShadowSleuth // Tactical Cyber Suite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #030508;
+            color: #00ff66;
+            font-family: 'JetBrains Mono', monospace;
+            overflow-x: hidden;
+        }
+        /* Tactical Skeleton / Cyberpunk Background Watermark */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle, rgba(0,255,102,0.06) 0%, rgba(3,5,8,0.96) 90%),
+                        url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1920&auto=format&fit=crop') no-repeat center center;
+            background-size: cover;
+            opacity: 0.15;
+            z-index: -999;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: #ffffff;
+            text-shadow: 0 0 15px rgba(0, 255, 102, 0.6);
+            text-align: center;
+        }
+        .dev-tag {
+            text-align: center;
+            color: #00ffcc;
+            letter-spacing: 3px;
+            font-size: 13px;
+            margin-bottom: 25px;
+            font-family: 'Orbitron', sans-serif;
+        }
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .tab-btn {
+            background: rgba(8, 15, 25, 0.9);
+            border: 1px solid #00ff66;
+            color: #00ff66;
+            padding: 10px 18px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: 0.3s;
+            font-size: 12px;
+        }
+        .tab-btn.active, .tab-btn:hover {
+            background: #00ff66;
+            color: #030508;
+            box-shadow: 0 0 15px rgba(0,255,102,0.8);
+        }
+        .panel {
+            display: none;
+            background: rgba(6, 11, 20, 0.92);
+            border: 1px solid rgba(0, 255, 102, 0.4);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+        }
+        .panel.active { display: block; }
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #080f1a;
+            border: 1px solid rgba(0,255,102,0.5);
+            color: #00ff66;
+            font-family: 'JetBrains Mono', monospace;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        button.action-btn {
+            background: linear-gradient(135deg, #003311, #006622);
+            color: #00ff66;
+            border: 1px solid #00ff66;
+            padding: 12px 25px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+            width: 100%;
+            transition: 0.3s;
+        }
+        button.action-btn:hover {
+            background: #00ff66;
+            color: #030508;
+            box-shadow: 0 0 20px rgba(0,255,102,0.9);
+        }
+        /* 4-Column Grid for Username Recon */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .platform-card {
+            background: rgba(10, 18, 30, 0.85);
+            border: 1px solid rgba(0, 255, 102, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: 0.3s;
+        }
+        .platform-card:hover {
+            border-color: #00ff66;
+            box-shadow: 0 0 15px rgba(0,255,102,0.6);
+        }
+        .result-box {
+            margin-top: 20px;
+            background: #05080f;
+            padding: 15px;
+            border: 1px solid #00ff66;
+            border-radius: 6px;
+            white-space: pre-wrap;
+        }
+        a { color: #00f0ff; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🛡️ SHADOWSLEUTH // TACTICAL OSINT ENGINE</h1>
+    <div class="dev-tag">Developer: Sreenand K // Status: Active Secure Suite</div>
+
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('phone', event)">Phone Intelligence</button>
+        <button class="tab-btn" onclick="switchTab('username', event)">Username Matrix</button>
+        <button class="tab-btn" onclick="switchTab('ip', event)">IP Geo-Location</button>
+        <button class="tab-btn" onclick="switchTab('domain', event)">Domain & DNS</button>
+        <button class="tab-btn" onclick="switchTab('mac', event)">MAC Lookup</button>
+    </div>
+
+    <!-- Phone Intelligence Panel -->
+    <div id="phone-panel" class="panel active">
+        <h3>📱 Phone Number Intelligence</h3>
+        <input type="text" id="phone-input" placeholder="Enter number (e.g. +918289804072)">
+        <button class="action-btn" onclick="checkPhone()">EXECUTE PHONE SCAN</button>
+        <div id="phone-result" class="result-box" style="display:none;"></div>
+    </div>
+
+    <!-- Username Recon Panel -->
+    <div id="username-panel" class="panel">
+        <h3>👤 Cross-Platform Username Matrix</h3>
+        <input type="text" id="username-input" placeholder="Enter target username">
+        <button class="action-btn" onclick="checkUsername()">EXECUTE USERNAME RECON</button>
+        <div id="username-grid" class="grid-container"></div>
+    </div>
+
+    <!-- IP Geolocation Panel -->
+    <div id="ip-panel" class="panel">
+        <h3>🌍 IP Network Telemetry & Geo-Trace</h3>
+        <input type="text" id="ip-input" placeholder="Enter target IP (leave blank for host)">
+        <button class="action-btn" onclick="checkIP()">FETCH IP TELEMETRY</button>
+        <div id="ip-result" class="result-box" style="display:none;"></div>
+    </div>
+
+    <!-- Domain & DNS Panel -->
+    <div id="domain-panel" class="panel">
+        <h3>🌐 Domain & DNS Resolution Suite</h3>
+        <input type="text" id="domain-input" placeholder="Enter domain name (e.g. google.com)">
+        <button class="action-btn" onclick="checkDomain()">RESOLVE DNS RECORDS</button>
+        <div id="domain-result" class="result-box" style="display:none;"></div>
+    </div>
+
+    <!-- MAC Vendor Lookup Panel -->
+    <div id="mac-panel" class="panel">
+        <h3>💻 MAC Hardware Vendor Identification</h3>
+        <input type="text" id="mac-input" placeholder="Enter MAC address (e.g. 00:11:22:33:44:55)">
+        <button class="action-btn" onclick="checkMAC()">QUERY HARDWARE VENDOR</button>
+        <div id="mac-result" class="result-box" style="display:none;"></div>
+    </div>
+</div>
+
+<script>
+    function switchTab(tab, evt) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tab + '-panel').classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+
+    async function checkPhone() {
+        const num = document.getElementById('phone-input').value;
+        const resBox = document.getElementById('phone-result');
+        resBox.style.display = 'block';
+        resBox.innerHTML = "[*] Analyzing telemetry data...";
+
+        const response = await fetch('/check_phone', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({number: num})
+        });
+        const data = await response.json();
+        
+        if(data.status === 'success') {
+            resBox.innerHTML = `[+] Target Verified: Valid Number\n` +
+                               `-> Full Number      : ${data.full_number}\n` +
+                               `-> Country/Location : ${data.location}\n` +
+                               `-> Service Provider : ${data.provider}\n` +
+                               `-> Timezone         : ${data.timezone}\n\n` +
+                               `🔗 <a href="${data.whatsapp}" target="_blank">Open WhatsApp Chat ↗</a>\n` +
+                               `🔗 <a href="${data.facebook}" target="_blank">Search Facebook ↗</a>`;
+        } else {
+            resBox.innerHTML = `[-] Error: ${data.message}`;
+        }
+    }
+
+    async function checkUsername() {
+        const uname = document.getElementById('username-input').value;
+        const grid = document.getElementById('username-grid');
+        grid.innerHTML = "<p style='color:#00ffcc;'>[*] Scanning global networks...</p>";
+
+        const response = await fetch('/check_username', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username: uname})
+        });
+        const data = await response.json();
+
+        if(data.status === 'success') {
+            grid.innerHTML = "";
+            data.results.forEach(item => {
+                let statusColor = item.status === 'FOUND' ? '#00ff66' : '#ff0055';
+                grid.innerHTML += `
+                    <div class="platform-card" style="border-color: ${statusColor};">
+                        <h4>${item.icon} ${item.name}</h4>
+                        <p style="color: ${statusColor}; font-size: 12px; font-weight:bold;">[${item.status}]</p>
+                        ${item.status === 'FOUND' ? `<a href="${item.url}" target="_blank">Access Link ↗</a>` : '<span style="color:#666; font-size:11px;">Restricted</span>'}
+                    </div>
+                `;
+            });
+        }
+    }
+
+    async function checkIP() {
+        const ip = document.getElementById('ip-input').value;
+        const resBox = document.getElementById('ip-result');
+        resBox.style.display = 'block';
+        resBox.innerHTML = "[*] Fetching IP telemetry...";
+
+        const response = await fetch('/check_ip', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ip: ip})
+        });
+        const data = await response.json();
+
+        if(data.status === 'success') {
+            resBox.innerHTML = JSON.stringify(data.data, null, 2);
+        } else {
+            resBox.innerHTML = `[-] Error: ${data.message}`;
+        }
+    }
+
+    async function checkDomain() {
+        const domain = document.getElementById('domain-input').value;
+        const resBox = document.getElementById('domain-result');
+        resBox.style.display = 'block';
+        resBox.innerHTML = "[*] Resolving DNS records...";
+
+        const response = await fetch('/check_domain', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({domain: domain})
+        });
+        const data = await response.json();
+
+        if(data.status === 'success') {
+            resBox.innerHTML = `[+] Resolved IP   : ${data.ip}\n[+] Hostname Entity : ${data.hostname}`;
+        } else {
+            resBox.innerHTML = `[-] Resolution Failed: ${data.message}`;
+        }
+    }
+
+    async function checkMAC() {
+        const mac = document.getElementById('mac-input').value;
+        const resBox = document.getElementById('mac-result');
+        resBox.style.display = 'block';
+        resBox.innerHTML = "[*] Querying hardware vendor...";
+
+        const response = await fetch('/check_mac', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({mac: mac})
+        });
+        const data = await response.json();
+
+        if(data.status === 'success') {
+            resBox.innerHTML = `[+] Vendor Identified: ${data.vendor}`;
+        } else {
+            resBox.innerHTML = `[-] Error: ${data.message}`;
+        }
+    }
+</script>
+
+</body>
+</html>
