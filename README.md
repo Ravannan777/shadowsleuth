@@ -42,6 +42,10 @@ Make sure you have Python installed, then run:
 * Windows / Linux / Termux:
    ```bash
    python shadowsleuth.py
+or
+ ```bash
+  python app.py
+   
 
 # 📖 Usage Guide*
 When you run the script, an interactive menu will appear with the following options:
