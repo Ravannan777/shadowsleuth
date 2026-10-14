@@ -31,21 +31,21 @@
    git clone [https://github.com/Ravannan777/ShadowSleuth.git](https://github.com/Ravannan777/ShadowSleuth.git)
 
     cd ShadowSleuth
-2. Install Required Python Libraries:
+2 create a virtual environment
+   
+3. Install Required Python Libraries:
 Make sure you have Python installed, then run:
    ```bash
    
    pip install requests phonenumbers
 
-3. Run the Tool:
+4. Run the Tool:
 
 * Windows / Linux / Termux:
    ```bash
-   python shadowsleuth.py
-or
- ```bash
-  python app.py
-   
+   python shadowsleuth
+   or
+   python app.py
 
 # 📖 Usage Guide*
 When you run the script, an interactive menu will appear with the following options:
